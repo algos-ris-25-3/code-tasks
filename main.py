@@ -41,6 +41,7 @@ def fibonacci(n: int) -> int:
     return a
 
 
+@profile()
 def main():
     n = 35
     print(f"Вычисление {n} числа Фибоначчи рекурсивно:")
