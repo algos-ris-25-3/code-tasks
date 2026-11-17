@@ -9,6 +9,7 @@ def gcd_recursive(a: int, b: int) -> int:
     :param b: целое число b
     :return: значение наибольшего общего делителя
     """
+    a, b = abs(a), abs(b)
     if a == 0 or b == 0: return a + b
     return gcd_recursive(b, a%b)
 
@@ -21,6 +22,7 @@ def gcd_iterative_slow(a: int, b: int) -> int:
     :param b: целое число b
     :return: значение наибольшего общего делителя
     """
+    a, b = abs(a), abs(b)
     if a ==0 or b == 0: return a + b
     while a != b:
         while a > b:
