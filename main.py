@@ -8,9 +8,9 @@ def fibonacci_rec(n: int) -> int:
     :param n: порядковый номер числа Фибоначчи
     :return: число Фибоначчи
     """
-    if n ==1 or n ==2:
+    if n == 1 or n == 2:
         return 1
-    return fibonacci_rec(n-1) + fibonacci_rec(n-2)
+    return fibonacci_rec(n - 1) + fibonacci_rec(n - 2)
 
 
 def fibonacci_iter(n: int) -> int:
@@ -41,7 +41,6 @@ def fibonacci(n: int) -> int:
     for z in range(3, n + 1):
         a, b = b, a + b
     return b
-    pass
 
 
 def main():
