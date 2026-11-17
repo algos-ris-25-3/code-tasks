@@ -36,26 +36,30 @@ class GcdGenerator:
     @property
     def gcd_value(self) -> int:
         """Возвращает значение НОД для a_value и b_value"""
-        pass
+        return self.__values[COMMON_FACTORS]
 
     @property
     def a_value(self) -> int:
         """Возвращает число, полученное в результате перемножения простых чисел,
         возведенных в случайную степень. Число имеет как общие, так и различные
         множители с числом b_value"""
-        pass
+        return self.__values[COMMON_FACTORS] * self.__values[A_ONLY_FACTORS]
 
     @property
     def b_value(self) -> int:
         """Возвращает число, полученное в результате перемножения простых чисел,
         возведенных в случайную степень. Число имеет как общие, так и различные
         множители с числом a_value"""
-        pass
+        return self.__values[COMMON_FACTORS] * self.__values[B_ONLY_FACTORS]
 
     @property
     def lcm_value(self) -> int:
         """Возвращает значение НОК для a_value и b_value"""
-        pass
+        return (
+            self.__values[COMMON_FACTORS]
+            * self.__values[A_ONLY_FACTORS]
+            * self.__values[B_ONLY_FACTORS]
+        )
 
     @property
     def max_factor_cnt(self) -> int:
@@ -71,7 +75,16 @@ class GcdGenerator:
         умолчанию 5.
         :return: None
         """
-        pass
+        values = [1, 1, 1]
+        primes = random.sample(self.__primes, factor_cnt)
+        groups = (COMMON_FACTORS, A_ONLY_FACTORS, B_ONLY_FACTORS)
+
+        for prime in primes:
+            power = random.randint(1, max_pow)
+            group = random.choice(groups)
+            values[group] *= prime**power
+
+        self.__values = values
 
 
 if __name__ == "__main__":
