@@ -20,6 +20,13 @@ def fibonacci_iter(n: int) -> int:
     :param n: порядковый номер числа Фибоначчи
     :return: число Фибоначчи
     """
+    if n == 1 or n == 2:
+        return 1
+
+    numbers = [1, 1]
+    for i in range(3, n + 1):
+        numbers.append(numbers[-1] + numbers[-2])
+    return numbers[-1]
 
 
 def fibonacci(n: int) -> int:
