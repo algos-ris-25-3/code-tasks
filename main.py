@@ -1,5 +1,3 @@
-from profilehooks import profile
-
 
 def fibonacci_rec(n: int) -> int:
     """Возвращает N-е число Фибоначчи. Реализована рекурсивно согласно
