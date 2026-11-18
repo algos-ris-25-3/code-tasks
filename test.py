@@ -1,3 +1,4 @@
+
 import unittest
 
 from main import calculate_determinant
@@ -63,6 +64,78 @@ class TestDeterminant(unittest.TestCase):
                 self.assertEqual(
                     calculate_determinant(test_case.matrix), test_case.det
                 )
+
+    def test_not_list(self):
+        """Проверяет исключение, если матрица не является списком"""
+        self.assertRaises(Exception, calculate_determinant, 123)
+
+    def test_row_not_list(self):
+        """Проверяет исключение, если строка матрицы не является списком"""
+        matrix = [[1, 2], 3]
+        self.assertRaises(Exception, calculate_determinant, matrix)
+
+    def test_empty_row(self):
+        """Проверяет исключение при наличии пустой строки"""
+        matrix = [[]]
+        self.assertRaises(Exception, calculate_determinant, matrix)
+
+    def test_float_element(self):
+        """Проверяет исключение при наличии дробного числа"""
+        matrix = [[1, 2], [3, 4.5]]
+        self.assertRaises(Exception, calculate_determinant, matrix)
+
+    def test_string_element(self):
+        """Проверяет исключение при наличии строкового элемента"""
+        matrix = [[1, 2], [3, "4"]]
+        self.assertRaises(Exception, calculate_determinant, matrix)
+
+    def test_boolean_element(self):
+        """Проверяет исключение при наличии логического значения"""
+        matrix = [[True, 2], [3, 4]]
+        self.assertRaises(Exception, calculate_determinant, matrix)
+
+    def test_first_order_negative(self):
+        """Проверяет определитель порядка 1 с отрицательным элементом"""
+        matrix = [[-7]]
+        self.assertEqual(calculate_determinant(matrix), -7)
+
+    def test_zero_matrix(self):
+        """Проверяет определитель нулевой матрицы"""
+        matrix = [[0, 0], [0, 0]]
+        self.assertEqual(calculate_determinant(matrix), 0)
+
+    def test_identity_matrix(self):
+        """Проверяет определитель единичной матрицы"""
+        matrix = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+        self.assertEqual(calculate_determinant(matrix), 1)
+
+    def test_triangular_matrix(self):
+        """Проверяет определитель треугольной матрицы"""
+        matrix = [[2, 3, 4], [0, 5, 6], [0, 0, 7]]
+        self.assertEqual(calculate_determinant(matrix), 70)
+
+    def test_equal_rows(self):
+        """Проверяет определитель матрицы с одинаковыми строками"""
+        matrix = [[1, 2, 3], [1, 2, 3], [4, 5, 6]]
+        self.assertEqual(calculate_determinant(matrix), 0)
+
+    def test_zero_first_row(self):
+        """Проверяет определитель матрицы с нулевой первой строкой"""
+        matrix = [[0, 0, 0], [1, 2, 3], [4, 5, 6]]
+        self.assertEqual(calculate_determinant(matrix), 0)
+
+    def test_nan(self):
+        """Проверяет исключение при передаче NaN вместо матрицы"""
+        self.assertRaises(Exception, calculate_determinant, float("nan"))
+
+    def test_matrix_unchanged(self):
+        """Проверяет, что исходная матрица не изменяется после вычисления"""
+        matrix = [[1, 2], [3, 4]]
+        original = [[1, 2], [3, 4]]
+
+        calculate_determinant(matrix)
+
+        self.assertEqual(matrix, original)
 
 
 if __name__ == "__main__":
