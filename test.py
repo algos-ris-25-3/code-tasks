@@ -49,6 +49,61 @@ class TestTridiagonalDeterminant(unittest.TestCase):
         matrix = [[2, -3, 0, 0], [5, 2, -3, 0], [0, 5, 2, -3], [0, 0, 5, 2]]
         self.assertEqual(get_tridiagonal_determinant(matrix), 421)
 
+    def test_third_order_2(self):
+        """Проверяет расчет определителя для симметричной матрицы 3x3"""
+        matrix = [[3, 1, 0], [1, 3, 1], [0, 1, 3]]
+        self.assertEqual(get_tridiagonal_determinant(matrix), 21)
+
+    def test_third_order_3(self):
+        """Проверяет расчет определителя для матрицы 3x3 c одинаковыми числами"""
+        matrix = [[10, 10, 0], [10, 10, 10], [0, 10, 10]]
+        self.assertEqual(get_tridiagonal_determinant(matrix), -1000)
+
+    def test_fourth_order_2(self):
+        """Проверяет расчет определителя для матрицы 4x4
+        с нулевой главной диагональю"""
+        matrix = [[0, 4, 0, 0], [2, 0, 4, 0], [0, 2, 0, 4], [0, 0, 2, 0]]
+        self.assertEqual(get_tridiagonal_determinant(matrix), 64)
+
+    def test_fourth_order_3(self):
+        """Проверяет расчет определителя для матрицы 4x4
+        с отрицательными соседними диагоналями"""
+        matrix = [[3, -2, 0, 0], [-2, 3, -2, 0], [0, -2, 3, -2], [0, 0, -2, 3]]
+        self.assertEqual(get_tridiagonal_determinant(matrix), -11)
+
+    def test_fifth_order(self):
+        """Проверяет расчет определителя для матрицы 5x5"""
+        matrix = [
+            [3, 1, 0, 0, 0],
+            [-4, 3, 1, 0, 0],
+            [0, -4, 3, 1, 0],
+            [0, 0, -4, 3, 1],
+            [0, 0, 0, -4, 3],
+        ]
+        self.assertEqual(get_tridiagonal_determinant(matrix), 819)
+
+    def test_fifth_order_2(self):
+        """Проверяет расчет отрицательного определителя для матрицы 5x5"""
+        matrix = [
+            [-1, 3, 0, 0, 0],
+            [2, -1, 3, 0, 0],
+            [0, 2, -1, 3, 0],
+            [0, 0, 2, -1, 3],
+            [0, 0, 0, 2, -1],
+        ]
+        self.assertEqual(get_tridiagonal_determinant(matrix), -85)
+
+    def test_fifth_order_3(self):
+        """Проверяет расчет нулевого определителя для матрицы 5x5"""
+        matrix = [
+            [2, 2, 0, 0, 0],
+            [2, 2, 2, 0, 0],
+            [0, 2, 2, 2, 0],
+            [0, 0, 2, 2, 2],
+            [0, 0, 0, 2, 2],
+        ]
+        self.assertEqual(get_tridiagonal_determinant(matrix), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
