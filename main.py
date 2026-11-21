@@ -1,11 +1,8 @@
 def get_tridiagonal_determinant(matrix: list[list[int]]) -> int:
-    """Итеративное вычисление определителя трёхдиагональной матрицы.
-    :param matrix: квадратная целочисленная трёхдиагональная матрица
-        порядка не меньше 1 с постоянными значениями на каждой
-        из трёх диагоналей
-    :raises Exception: если matrix не является такой матрицей
-    :return: значение определителя
-    """
+
+    if matrix is None:
+        raise Exception("Матрица не может быть None")
+
     n = len(matrix)
 
     # Проверка: квадратная матрица порядка >= 1
@@ -18,7 +15,7 @@ def get_tridiagonal_determinant(matrix: list[list[int]]) -> int:
     # Проверка: все элементы — целые числа
     for i in range(n):
         for j in range(n):
-            if not isinstance(matrix[i][j], int):
+            if type(matrix[i][j]) is not int:
                 raise Exception("Все элементы должны быть целыми числами")
 
     # Определяем значения на диагоналях
@@ -53,8 +50,8 @@ def get_tridiagonal_determinant(matrix: list[list[int]]) -> int:
     if n == 1:
         return a
 
-    d_prev2 = a                    # D_1
-    d_prev1 = a * a - b * c        # D_2
+    d_prev2 = a  # D_1
+    d_prev1 = a * a - b * c  # D_2
 
     if n == 2:
         return d_prev1
@@ -66,6 +63,7 @@ def get_tridiagonal_determinant(matrix: list[list[int]]) -> int:
 
     return d_prev1
 
+
 def main():
     matrix = [[2, -3, 0, 0], [5, 2, -3, 0], [0, 5, 2, -3], [0, 0, 5, 2]]
     print("Трехдиагональная матрица")
@@ -73,6 +71,7 @@ def main():
         print(row)
 
     print(f"Определитель матрицы равен {get_tridiagonal_determinant(matrix)}")
+
 
 if __name__ == "__main__":
     main()
