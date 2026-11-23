@@ -32,7 +32,6 @@ def validate(matrix) -> None:
             if col != 0 and (x < y - 1 or x > y + 1): 
                 raise ValueError(f'element with index ({y}; {x}) different than 0')
 
-validate([[1,2,0,0,0],[3,1,2,0,0],[0,3,1,2,0],[0,0,3,1,2],[0,0,0,3,1]])
 
 def main():
     matrix = [[2, -3, 0, 0], [5, 2, -3, 0], [0, 5, 2, -3], [0, 0, 5, 2]]
