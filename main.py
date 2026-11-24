@@ -1,3 +1,17 @@
+def get_tridiagonal_determinant_by_coefficients(a : int, b : int, c : int, n : int) -> int:
+    """
+    Внутренняя функция для вычисления определителя трёхдиагональной ленты разложением.
+    :param a,b,c: числа по диагоналям матрицы
+    :param n: порядок матрицы
+    :return: рекурсивное вычисление определителя
+    """
+    if n == 0:
+        return 1
+    if n == 1:
+        return a
+    
+    return a * get_tridiagonal_determinant_by_coefficients(a, b, c, n - 1) - b * c * get_tridiagonal_determinant_by_coefficients(a, b, c, n - 2)
+
 def get_tridiagonal_determinant(matrix: list[list[int]]) -> int:
     """Рекурсивное вычисление определителя трёхдиагональной ленты разложением.
 
@@ -7,8 +21,16 @@ def get_tridiagonal_determinant(matrix: list[list[int]]) -> int:
     :raises Exception: если matrix не является такой матрицей
     :return: значение определителя
     """
+    if len(matrix) == 1:
+        return matrix[0][0]
+    
     validate(matrix)
-    pass
+    
+    a = matrix[0][0]
+    b = matrix[0][1]
+    c = matrix[1][0]
+    n = len(matrix)
+    return get_tridiagonal_determinant_by_coefficients(a, b, c, n)
 
 
 def validate(matrix) -> None: 
