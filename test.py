@@ -29,6 +29,56 @@ class TestTridiagonalDeterminant(unittest.TestCase):
         matrix = [[1, 2, 0, 7], [3, 1, 2, 0], [0, 3, 1, 2], [0, 0, 3, 1]]
         self.assertRaises(Exception, get_tridiagonal_determinant, matrix)
 
+    def test_type_of_lists(self):
+        '''Проверяет, что функция выбрасывает исключение при передаче 
+        списка с не списками возвращает исключение'''
+        matrix = [
+            [1,2,0],
+            (3,1,2),
+            [0,3,1]
+        ]
+        self.assertRaises(Exception, get_tridiagonal_determinant, matrix)
+
+    def test_type_of_elements_matrix(self):
+        '''Проверяет, что функция выбрасывает исключение при передаче
+        матрицы с не интовыми элементами возвращает исключение'''
+        matrix = [[1, 2, '0', 0], [3, 1, 2, 0], [0, 3, 1, 2]]
+        self.assertRaises(Exception, get_tridiagonal_determinant, matrix)
+
+    def test_elements_on_main_diagonal_not_equal(self):
+        '''Проверяет, что функция выбрасывает исключение при передаче
+                матрицы где на главной диагонали отлично хоть одно значение
+                  элементами возвращает исключение'''
+        matrix = [
+            [6, 53, 0,  0, 0],
+            [-4, 6, 53, 0, 0],
+            [0, -4, 6, 53, 0],
+            [0, 0, -4, 4, 53],
+            [0, 0, 0, -4, 6 ]
+        ]
+        self.assertRaises(Exception, get_tridiagonal_determinant, matrix)
+
+    def test_elements_on_second_diagonal_not_equal(self):
+        '''Проверяет, что функция выбрасывает исключение при передаче
+            матрицы где на главной диагонали отлично хоть одно значение
+            элементами возвращает исключение'''
+        matrix1 = [
+                    [6, 35, 0,  0, 0],
+                    [-4, 6, 53, 0, 0],
+                    [0, -4, 6, 53, 0],
+                    [0, 0, -4, 6, 53],
+                    [0, 0, 0, -4, 6 ]
+                ]
+        matrix2 = [
+                    [6, 53, 0,  0, 0],
+                    [-4, 6, 53, 0, 0],
+                    [0, -4, 6, 53, 0],
+                    [0, 0,  4, 6, 53],
+                    [0, 0, 0, -4, 6 ]
+                ]
+        self.assertRaises(Exception, get_tridiagonal_determinant, matrix1)
+        self.assertRaises(Exception, get_tridiagonal_determinant, matrix2)
+
     def test_first_order(self):
         """Проверяет расчет определителя для матрицы порядка 1"""
         matrix = [[1]]

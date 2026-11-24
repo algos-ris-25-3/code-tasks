@@ -7,6 +7,7 @@ def get_tridiagonal_determinant(matrix: list[list[int]]) -> int:
     :raises Exception: если matrix не является такой матрицей
     :return: значение определителя
     """
+    validate(matrix)
     pass
 
 
@@ -42,5 +43,5 @@ def main():
     print(f"Определитель матрицы равен {get_tridiagonal_determinant(matrix)}")
 
 
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()
