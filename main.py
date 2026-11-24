@@ -21,11 +21,11 @@ def get_tridiagonal_determinant(matrix: list[list[int]]) -> int:
     :raises Exception: если matrix не является такой матрицей
     :return: значение определителя
     """
-    if len(matrix) == 1:
-        return matrix[0][0]
+    
     
     validate(matrix)
-    
+    if len(matrix) == 1:
+        return matrix[0][0]
     a = matrix[0][0]
     b = matrix[0][1]
     c = matrix[1][0]
