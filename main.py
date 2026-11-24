@@ -1,4 +1,4 @@
-def get_tridiagonal_determinant_by_coefficients(a : int, b : int, c : int, n : int) -> int:
+def get_tridiagonal_determinant_by_coefficients(a: int, b: int, c: int, n: int) -> int:
     """
     Внутренняя функция для вычисления определителя трёхдиагональной ленты разложением.
     :param a,b,c: числа по диагоналям матрицы
@@ -9,8 +9,11 @@ def get_tridiagonal_determinant_by_coefficients(a : int, b : int, c : int, n : i
         return 1
     if n == 1:
         return a
-    
-    return a * get_tridiagonal_determinant_by_coefficients(a, b, c, n - 1) - b * c * get_tridiagonal_determinant_by_coefficients(a, b, c, n - 2)
+
+    return a * get_tridiagonal_determinant_by_coefficients(
+        a, b, c, n - 1
+    ) - b * c * get_tridiagonal_determinant_by_coefficients(a, b, c, n - 2)
+
 
 def get_tridiagonal_determinant(matrix: list[list[int]]) -> int:
     """Рекурсивное вычисление определителя трёхдиагональной ленты разложением.
@@ -21,8 +24,7 @@ def get_tridiagonal_determinant(matrix: list[list[int]]) -> int:
     :raises Exception: если matrix не является такой матрицей
     :return: значение определителя
     """
-    
-    
+
     validate(matrix)
     if len(matrix) == 1:
         return matrix[0][0]
@@ -33,27 +35,28 @@ def get_tridiagonal_determinant(matrix: list[list[int]]) -> int:
     return get_tridiagonal_determinant_by_coefficients(a, b, c, n)
 
 
-def validate(matrix) -> None: 
+def validate(matrix) -> None:
     if not isinstance(matrix, list):
         raise TypeError("matrix must be list")
     if any(not isinstance(i, list) for i in matrix):
-        raise TypeError('matrix must be list of list')
+        raise TypeError("matrix must be list of list")
     if any(not isinstance(j, int) for i in matrix for j in i):
-        raise TypeError('elements of matrix must be int')
+        raise TypeError("elements of matrix must be int")
     if any(len(i) != len(matrix) for i in matrix):
         raise ValueError("matrix must be square")
-    if len(matrix) == 1: return None
+    if len(matrix) == 1:
+        return None
     a, b, c = matrix[0][0], matrix[0][1], matrix[1][0]
     for y, row in enumerate(matrix):
         for x, col in enumerate(row):
             if y == x and a != col:
-                raise ValueError(f'element with index ({y}; {x}) different than {a}')
+                raise ValueError(f"element with index ({y}; {x}) different than {a}")
             if y == x - 1 and b != col:
-                raise ValueError(f'element with index ({y}; {x}) different than {b}')
+                raise ValueError(f"element with index ({y}; {x}) different than {b}")
             if y - 1 == x and c != col:
-                raise ValueError(f'element with index ({y}; {x}) different than {c}')
-            if col != 0 and (x < y - 1 or x > y + 1): 
-                raise ValueError(f'element with index ({y}; {x}) different than 0')
+                raise ValueError(f"element with index ({y}; {x}) different than {c}")
+            if col != 0 and (x < y - 1 or x > y + 1):
+                raise ValueError(f"element with index ({y}; {x}) different than 0")
 
 
 def main():
