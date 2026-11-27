@@ -116,3 +116,87 @@ def generate_conditions(
     raise ValueError(
         "В заданном диапазоне нет набора, удовлетворяющего ограничениям генератора."
     )
+
+
+# Константы для проверки простоты коэффициентов
+NUMERATOR_LIMIT = 20
+DENOMINATOR_LIMIT = 10
+
+
+def is_simple_coefficient(coeff: Fraction) -> bool:
+    """Проверяет, что коэффициент является целым числом или простой дробью.
+
+    Целое число считается дробью со знаменателем 1.
+    Критерии: |числитель| <= NUMERATOR_LIMIT, знаменатель <= DENOMINATOR_LIMIT.
+
+    :param coeff: точный коэффициент как дробь
+    :return: True, если коэффициент достаточно прост для ручного решения
+    """
+    return (
+        abs(coeff.numerator) <= NUMERATOR_LIMIT
+        and coeff.denominator <= DENOMINATOR_LIMIT
+    )
+
+
+def evaluate_formula(candidate: MatrixParameters) -> FormulaParameters | None:
+    """Вычисляет коэффициенты формулы для определителя трёхдиагональной матрицы.
+
+    Использует начальные условия D1 = a, D2 = a² - bc и решает систему
+    для нахождения коэффициентов. Для разных корней используется формула
+    Dn = A1·λ1ⁿ + A2·λ2ⁿ, для двойного корня Dn = (A·n + B)·λⁿ.
+
+    :param candidate: параметры матрицы и корни от Катиного генератора
+    :return: тип формулы и коэффициенты, если они простые, иначе None
+    """
+    a = candidate["a"]
+    b = candidate["b"]
+    c = candidate["c"]
+    root1 = candidate["root1"]
+    root2 = candidate["root2"]
+
+    d1 = a
+    d2 = a * a - b * c
+
+    if root1 != root2:
+        # Итоговое решение системы различных корней:
+        # A1 = (D1·λ2 - D2) / (λ1·(λ2 - λ1))
+        # A2 = (D2 - D1·λ1) / (λ2·(λ2 - λ1))
+
+        lambda1 = Fraction(root1)
+        lambda2 = Fraction(root2)
+        d1_frac = Fraction(d1)
+        d2_frac = Fraction(d2)
+
+        denominator1 = lambda1 * (lambda2 - lambda1)
+        denominator2 = lambda2 * (lambda2 - lambda1)
+
+        a1 = (d1_frac * lambda2 - d2_frac) / denominator1
+        a2 = (d2_frac - d1_frac * lambda1) / denominator2
+
+        if not (is_simple_coefficient(a1) and is_simple_coefficient(a2)):
+            return None
+
+        return FormulaParameters(
+            root_type="distinct",
+            coefficients={"A1": a1, "A2": a2},
+        )
+    else:
+        # Итоговое решение системы двойного корня:
+        # A = (D2 - D1·λ) / λ²
+        # B = (2·D1·λ - D2) / λ²
+
+        lambda_val = Fraction(root1)
+        d1_frac = Fraction(d1)
+        d2_frac = Fraction(d2)
+        lambda_squared = lambda_val * lambda_val
+
+        a_coeff = (d2_frac - d1_frac * lambda_val) / lambda_squared
+        b_coeff = (2 * d1_frac * lambda_val - d2_frac) / lambda_squared
+
+        if not (is_simple_coefficient(a_coeff) and is_simple_coefficient(b_coeff)):
+            return None
+
+        return FormulaParameters(
+            root_type="double",
+            coefficients={"A": a_coeff, "B": b_coeff},
+        )

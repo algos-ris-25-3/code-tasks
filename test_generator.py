@@ -2,7 +2,13 @@ import unittest
 from fractions import Fraction
 from unittest.mock import Mock
 
-from main import find_diagonal_pair, generate_conditions, iter_matrix_candidates
+from main import (
+    evaluate_formula,
+    find_diagonal_pair,
+    generate_conditions,
+    is_simple_coefficient,
+    iter_matrix_candidates,
+)
 
 
 class TestDiagonalPair(unittest.TestCase):
@@ -119,6 +125,174 @@ class TestConditionsSelection(unittest.TestCase):
         """Ошибка расчёта не маскируется сообщением об отсутствии набора."""
         with self.assertRaisesRegex(RuntimeError, "Ошибка расчёта"):
             generate_conditions(2, 3, Mock(side_effect=RuntimeError("Ошибка расчёта")))
+
+
+class TestEvaluateFormula(unittest.TestCase):
+    """Проверки вычисления коэффициентов формулы."""
+
+    def test_distinct_roots_positive(self):
+        """Разные положительные корни дают целые коэффициенты."""
+        candidate = {"a": 5, "b": -3, "c": -2, "root1": 2, "root2": 3}
+        result = evaluate_formula(candidate)
+        self.assertEqual(result["root_type"], "distinct")
+        self.assertEqual(result["coefficients"]["A1"], Fraction(-2))
+        self.assertEqual(result["coefficients"]["A2"], Fraction(3))
+
+    def test_double_root(self):
+        """Двойной корень даёт целые коэффициенты."""
+        candidate = {"a": 8, "b": 2, "c": 8, "root1": 4, "root2": 4}
+        result = evaluate_formula(candidate)
+        self.assertEqual(result["root_type"], "double")
+        self.assertEqual(result["coefficients"]["A"], Fraction(1))
+        self.assertEqual(result["coefficients"]["B"], Fraction(1))
+
+    def test_negative_roots(self):
+        """Отрицательные корни корректно обрабатываются."""
+        candidate = {"a": -5, "b": 2, "c": 3, "root1": -3, "root2": -2}
+        result = evaluate_formula(candidate)
+        self.assertEqual(result["root_type"], "distinct")
+        self.assertEqual(result["coefficients"]["A1"], Fraction(3))
+        self.assertEqual(result["coefficients"]["A2"], Fraction(-2))
+
+    def test_complex_coefficients_rejected(self):
+        """Сложные коэффициенты отклоняются (возврат None)."""
+        candidate = {"a": 14, "b": 1, "c": 13, "root1": 1, "root2": 13}
+        result = evaluate_formula(candidate)
+        self.assertIsNone(result)
+
+    def test_zero_main_diagonal(self):
+        """Нулевая главная диагональ и противоположные корни."""
+        candidate = {"a": 0, "b": -3, "c": 3, "root1": -3, "root2": 3}
+        result = evaluate_formula(candidate)
+        self.assertEqual(result["root_type"], "distinct")
+        self.assertEqual(result["coefficients"]["A1"], Fraction(1, 2))
+        self.assertEqual(result["coefficients"]["A2"], Fraction(1, 2))
+
+    def test_negative_double_root(self):
+        """Отрицательный двойной корень."""
+        candidate = {"a": -4, "b": -2, "c": -2, "root1": -2, "root2": -2}
+        result = evaluate_formula(candidate)
+        self.assertEqual(result["root_type"], "double")
+        self.assertEqual(result["coefficients"]["A"], Fraction(1))
+        self.assertEqual(result["coefficients"]["B"], Fraction(1))
+
+    def test_numerator_is_allowed(self):
+        """Числитель допустим (граничное значение)."""
+        self.assertTrue(is_simple_coefficient(Fraction(20, 1)))
+        self.assertTrue(is_simple_coefficient(Fraction(-20, 3)))
+        self.assertTrue(is_simple_coefficient(Fraction(20, 7)))
+
+    def test_numerator_is_rejected(self):
+        """Числитель недопустим (выходит за границу)."""
+        self.assertFalse(is_simple_coefficient(Fraction(21, 1)))
+        self.assertFalse(is_simple_coefficient(Fraction(-21, 2)))
+        self.assertFalse(is_simple_coefficient(Fraction(21, 10)))
+
+    def test_denominator_is_allowed(self):
+        """Знаменатель допустим (граничное значение)."""
+        self.assertTrue(is_simple_coefficient(Fraction(1, 10)))
+        self.assertTrue(is_simple_coefficient(Fraction(19, 10)))
+        self.assertTrue(is_simple_coefficient(Fraction(-20, 10)))
+
+    def test_denominator_is_rejected(self):
+        """Знаменатель недопустим (выходит за границу)."""
+        self.assertFalse(is_simple_coefficient(Fraction(1, 11)))
+        self.assertFalse(is_simple_coefficient(Fraction(20, 11)))
+        self.assertFalse(is_simple_coefficient(Fraction(-5, 11)))
+
+    def test_fraction_simplification(self):
+        """Проверяет автоматическое сокращение дробей."""
+        candidate = {"a": 7, "b": 2, "c": 5, "root1": 2, "root2": 5}
+        result = evaluate_formula(candidate)
+        self.assertIsNotNone(result)
+        self.assertEqual(result["coefficients"]["A1"], Fraction(-2, 3))
+        self.assertEqual(result["coefficients"]["A2"], Fraction(5, 3))
+        self.assertEqual(result["coefficients"]["A1"].denominator, 3)
+        self.assertEqual(result["coefficients"]["A2"].denominator, 3)
+
+    def test_negative_coefficients(self):
+        """Проверяет корректную работу с отрицательными коэффициентами."""
+        candidate = {"a": -5, "b": 2, "c": 3, "root1": -3, "root2": -2}
+        result = evaluate_formula(candidate)
+        self.assertIsNotNone(result)
+        self.assertEqual(result["coefficients"]["A2"], Fraction(-2))
+
+    def test_recurrent(self):
+        """Сравнение явной формулы с рекуррентным вычислением."""
+        candidate = {"a": 7, "b": 2, "c": 5, "root1": 2, "root2": 5}
+
+        # Коэффициенты для явной формулы
+        formula_res = evaluate_formula(candidate)
+        self.assertIsNotNone(formula_res)
+        coeffs = formula_res["coefficients"]
+        A1, A2 = coeffs["A1"], coeffs["A2"]
+        l1, l2 = Fraction(2), Fraction(5)
+
+        a, b, c = candidate["a"], candidate["b"], candidate["c"]
+        bc = b * c
+        d_prev = a
+        d_curr = a * a - bc
+
+        for n in range(1, 7):
+            if n == 1:
+                recurrent_val = d_prev
+            elif n == 2:
+                recurrent_val = d_curr
+            else:
+                next_val = a * d_curr - bc * d_prev
+                d_prev, d_curr = d_curr, next_val
+                recurrent_val = next_val
+
+            # Значение по явной формуле
+            explicit_val = A1 * (l1**n) + A2 * (l2**n)
+            self.assertEqual(
+                explicit_val,
+                Fraction(recurrent_val),
+                f"Несовпадение при n={n}: Явная={explicit_val}, "
+                f"Рекуррент={recurrent_val}",
+            )
+
+    def test_negative_double_root_recurrent(self):
+        """Сравнивает формулу двойного корня -2 с рекуррентным вычислением."""
+        candidate = {"a": -4, "b": -2, "c": -2, "root1": -2, "root2": -2}
+        formula = evaluate_formula(candidate)
+        self.assertIsNotNone(formula)
+        self.assertEqual(formula["root_type"], "double")
+        coefficients = formula["coefficients"]
+        previous_determinant = -4
+        current_determinant = 12
+
+        for order in range(1, 7):
+            if order == 1:
+                recurrent_determinant = previous_determinant
+            elif order == 2:
+                recurrent_determinant = current_determinant
+            else:
+                recurrent_determinant = (
+                    -4 * current_determinant - 4 * previous_determinant
+                )
+                previous_determinant = current_determinant
+                current_determinant = recurrent_determinant
+            explicit_determinant = (coefficients["A"] * order + coefficients["B"]) * (
+                -2
+            ) ** order
+            with self.subTest(order=order):
+                self.assertEqual(explicit_determinant, recurrent_determinant)
+
+    def test_integration_with_generator(self):
+        """Совместный вызов генератора с evaluate_formula."""
+        result = generate_conditions(2, 3, evaluate_formula)
+
+        self.assertIn("a", result)
+        self.assertIn("root_type", result)
+        self.assertIn("coefficients", result)
+
+        self.assertEqual(result["root1"], 2)
+        self.assertEqual(result["root2"], 2)
+        self.assertEqual(result["root_type"], "double")
+
+        self.assertEqual(result["coefficients"]["A"], Fraction(1))
+        self.assertEqual(result["coefficients"]["B"], Fraction(1))
 
 
 if __name__ == "__main__":
