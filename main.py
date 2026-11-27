@@ -10,7 +10,7 @@ def get_tridiagonal_determinant(matrix: list[list[int]]) -> int:
     a, b, c = validate_matrix(matrix)
     n = len(matrix)
 
-    def determinant(order):
+    def determinant(order: int) -> int:
         if order == 1:
             return a
         if order == 2:
@@ -19,10 +19,16 @@ def get_tridiagonal_determinant(matrix: list[list[int]]) -> int:
 
     return determinant(n)
 
-def validate_matrix(matrix):
+def validate_matrix(matrix) -> tuple[int, int, int]:
+    if not isinstance(matrix, list):
+        raise Exception("Матрица должна быть списком")
+
     n = len(matrix)
     if n == 0:
         raise Exception("Порядок матрицы должен быть не меньше 1")
+
+    if any(not isinstance(s, list) for s in matrix):
+        raise Exception("Матрица должна быть списком из списков")
 
     if any(len(row) != n for row in matrix):
         raise Exception("Матрица должна быть квадратной")
