@@ -1,8 +1,13 @@
+"""Подбор условий и коэффициентов явной формулы для ленточного определителя."""
+
 from collections.abc import Callable, Iterator
 from fractions import Fraction
 from typing import Literal, TypedDict
 
 DIAGONAL_LIMIT = 20
+
+INTEGER_BOUNDS_ERROR = "Границы диапазона должны быть целыми числами."
+ORDER_BOUNDS_ERROR = "Нижняя граница не должна превышать верхнюю."
 
 
 class MatrixParameters(TypedDict):
@@ -24,6 +29,23 @@ class FormulaParameters(TypedDict):
 
 class GeneratedConditions(MatrixParameters, FormulaParameters):
     """Полный набор условий для ручного вычисления определителя."""
+
+
+def validate_bounds(lower_bound: int, upper_bound: int) -> tuple[int, int]:
+    """Проверяет включительные границы диапазона корней.
+
+    :param lower_bound: нижняя граница диапазона
+    :param upper_bound: верхняя граница диапазона
+    :raises TypeError: если граница не целое число или имеет тип bool
+    :raises ValueError: если нижняя граница больше верхней
+    :return: проверенные границы в порядке (нижняя, верхняя)
+    """
+    for bound in (lower_bound, upper_bound):
+        if isinstance(bound, bool) or not isinstance(bound, int):
+            raise TypeError(INTEGER_BOUNDS_ERROR)
+    if lower_bound > upper_bound:
+        raise ValueError(ORDER_BOUNDS_ERROR)
+    return lower_bound, upper_bound
 
 
 def find_diagonal_pair(product: int) -> tuple[int, int] | None:
@@ -200,3 +222,58 @@ def evaluate_formula(candidate: MatrixParameters) -> FormulaParameters | None:
             root_type="double",
             coefficients={"A": a_coeff, "B": b_coeff},
         )
+
+
+def build_conditions(lower_bound: int, upper_bound: int) -> GeneratedConditions:
+    """Проверяет диапазон и возвращает первый подходящий набор условий.
+
+    :param lower_bound: нижняя граница корней включительно
+    :param upper_bound: верхняя граница корней включительно
+    :raises TypeError: если граница не целое число или имеет тип bool
+    :raises ValueError: если границы перепутаны или подходящего набора нет
+    :return: параметры матрицы, корни, тип формулы и точные коэффициенты
+    """
+    first_bound, second_bound = validate_bounds(lower_bound, upper_bound)
+    return generate_conditions(first_bound, second_bound, evaluate_formula)
+
+
+def format_conditions(conditions: GeneratedConditions) -> str:
+    """Формирует текст с параметрами матрицы, корнями и формулой.
+
+    :param conditions: набор, полученный от генератора условий
+    :return: многострочное описание с точными значениями коэффициентов
+    """
+    root_names = {"distinct": "разные корни", "double": "двойной корень"}
+    formulas = {
+        "distinct": "Dn = A1·λ1^n + A2·λ2^n",
+        "double": "Dn = (A·n + B)·λ^n",
+    }
+    root_type = conditions["root_type"]
+    coefficients = ", ".join(
+        f"{name} = {value}" for name, value in conditions["coefficients"].items()
+    )
+    return (
+        f"Параметры матрицы: a = {conditions['a']}, "
+        f"b = {conditions['b']}, c = {conditions['c']}\n"
+        f"Корни: {conditions['root1']} и {conditions['root2']} "
+        f"({root_names[root_type]})\n"
+        f"Формула: {formulas[root_type]}\n"
+        f"Коэффициенты: {coefficients}"
+    )
+
+
+def main() -> None:
+    """Показывает пример подбора условий и сообщение об отсутствии набора."""
+    for bounds in ((4, 4), (0, 0)):
+        try:
+            conditions = build_conditions(*bounds)
+        except (TypeError, ValueError) as error:
+            print(f"Диапазон {bounds}: {error}")
+            continue
+        print(f"Диапазон {bounds}")
+        print(format_conditions(conditions))
+        print()
+
+
+if __name__ == "__main__":
+    main()

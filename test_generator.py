@@ -3,11 +3,14 @@ from fractions import Fraction
 from unittest.mock import Mock
 
 from main import (
+    build_conditions,
     evaluate_formula,
     find_diagonal_pair,
+    format_conditions,
     generate_conditions,
     is_simple_coefficient,
     iter_matrix_candidates,
+    validate_bounds,
 )
 
 
@@ -293,6 +296,176 @@ class TestEvaluateFormula(unittest.TestCase):
 
         self.assertEqual(result["coefficients"]["A"], Fraction(1))
         self.assertEqual(result["coefficients"]["B"], Fraction(1))
+
+
+class TestValidateBounds(unittest.TestCase):
+    """Проверки типов и порядка границ диапазона."""
+
+    def test_valid_range(self):
+        """Принимает целые границы в правильном порядке."""
+        self.assertEqual(validate_bounds(-5, 5), (-5, 5))
+
+    def test_equal_bounds(self):
+        """Принимает диапазон из одного целого числа."""
+        self.assertEqual(validate_bounds(4, 4), (4, 4))
+
+    def test_reversed_bounds(self):
+        """Отклоняет нижнюю границу больше верхней."""
+        with self.assertRaisesRegex(ValueError, "не должна превышать"):
+            validate_bounds(5, 3)
+
+    def test_non_integer_bounds(self):
+        """Отклоняет границы нецелочисленных типов."""
+        for bounds in ((3.0, 5), ("3", 5), (None, 5), (Fraction(3), 5)):
+            with (
+                self.subTest(bounds=bounds),
+                self.assertRaisesRegex(TypeError, "целыми числами"),
+            ):
+                validate_bounds(*bounds)
+
+    def test_bool_bounds(self):
+        """Отклоняет логические значения в обеих позициях."""
+        for bounds in ((True, 5), (0, False)):
+            with (
+                self.subTest(bounds=bounds),
+                self.assertRaisesRegex(TypeError, "целыми числами"),
+            ):
+                validate_bounds(*bounds)
+
+
+class TestBuildConditions(unittest.TestCase):
+    """Проверки публичного вызова генератора условий."""
+
+    def test_equal_bounds_double_root(self):
+        """Возвращает полный набор для двойного корня 4."""
+        self.assertEqual(
+            build_conditions(4, 4),
+            {
+                "a": 8,
+                "b": -4,
+                "c": -4,
+                "root1": 4,
+                "root2": 4,
+                "root_type": "double",
+                "coefficients": {"A": Fraction(1), "B": Fraction(1)},
+            },
+        )
+
+    def test_negative_range(self):
+        """Подбирает параметры в полностью отрицательном диапазоне."""
+        conditions = build_conditions(-5, -2)
+        self.assertEqual(conditions["root1"], -5)
+        self.assertEqual(conditions["root2"], -5)
+        self.assertEqual(conditions["root_type"], "double")
+        self.assertEqual(conditions["a"], -10)
+        self.assertEqual(conditions["b"] * conditions["c"], 25)
+
+    def test_range_containing_zero(self):
+        """Находит ненулевой корень в диапазоне с нулём."""
+        conditions = build_conditions(-1, 1)
+        self.assertEqual(conditions["root1"], -1)
+        self.assertEqual(conditions["root_type"], "double")
+
+    def test_positive_range(self):
+        """Подбирает первый допустимый корень положительного диапазона."""
+        conditions = build_conditions(2, 3)
+        self.assertEqual(conditions["root1"], 2)
+        self.assertEqual(conditions["root2"], 2)
+        self.assertEqual(conditions["a"], 4)
+
+    def test_zero_only_range(self):
+        """Сообщает, что для диапазона из одного нуля условий нет."""
+        with self.assertRaisesRegex(ValueError, "нет набора"):
+            build_conditions(0, 0)
+
+    def test_reversed_bounds(self):
+        """Сообщает об обратном порядке границ до подбора условий."""
+        with self.assertRaisesRegex(ValueError, "не должна превышать"):
+            build_conditions(5, 3)
+
+    def test_non_integer_bounds(self):
+        """Отклоняет дробную границу при вызове генератора."""
+        with self.assertRaisesRegex(TypeError, "целыми числами"):
+            build_conditions(2.5, 6)
+
+    def test_outside_limits(self):
+        """Сообщает об отсутствии набора для слишком больших корней."""
+        with self.assertRaisesRegex(ValueError, "нет набора"):
+            build_conditions(10**12, 10**12 + 5)
+
+    def test_repeatable(self):
+        """Возвращает одинаковый результат для одинаковых границ."""
+        self.assertEqual(build_conditions(2, 3), build_conditions(2, 3))
+
+    def test_vieta_identities(self):
+        """Проверяет формулы Виета и ненулевые соседние диагонали."""
+        conditions = build_conditions(4, 4)
+        root1, root2 = conditions["root1"], conditions["root2"]
+        self.assertEqual(conditions["a"], root1 + root2)
+        self.assertEqual(conditions["b"] * conditions["c"], root1 * root2)
+        self.assertNotEqual(conditions["b"], 0)
+        self.assertNotEqual(conditions["c"], 0)
+
+    def test_distinct_roots_through_generator(self):
+        """Находит разные корни и точные коэффициенты."""
+        conditions = build_conditions(-25, -9)
+        self.assertEqual(conditions["a"], -20)
+        self.assertEqual(conditions["root1"], -11)
+        self.assertEqual(conditions["root2"], -9)
+        self.assertEqual(conditions["root_type"], "distinct")
+        self.assertEqual(conditions["coefficients"]["A1"], Fraction(11, 2))
+        self.assertEqual(conditions["coefficients"]["A2"], Fraction(-9, 2))
+
+
+class TestFormatConditions(unittest.TestCase):
+    """Проверки текстового представления результата."""
+
+    def test_double_root_display(self):
+        """Выводит параметры, корень и формулу для двойного корня."""
+        text = format_conditions(build_conditions(4, 4))
+        self.assertIn("a = 8, b = -4, c = -4", text)
+        self.assertIn("Корни: 4 и 4", text)
+        self.assertIn("двойной корень", text)
+        self.assertIn("Dn = (A·n + B)·λ^n", text)
+        self.assertIn("Коэффициенты: A = 1, B = 1", text)
+
+    def test_distinct_root_display(self):
+        """Выводит формулу для разных корней и точные дроби."""
+        conditions = {
+            "a": 0,
+            "b": -3,
+            "c": 3,
+            "root1": -3,
+            "root2": 3,
+            "root_type": "distinct",
+            "coefficients": {"A1": Fraction(1, 2), "A2": Fraction(1, 2)},
+        }
+        text = format_conditions(conditions)
+        self.assertIn("разные корни", text)
+        self.assertIn("Dn = A1·λ1^n + A2·λ2^n", text)
+        self.assertIn("A1 = 1/2, A2 = 1/2", text)
+
+    def test_distinct_output_from_generator(self):
+        """Форматирует результат генератора с разными корнями."""
+        text = format_conditions(build_conditions(-25, -9))
+        self.assertIn("разные корни", text)
+        self.assertIn("A1 = 11/2", text)
+        self.assertIn("A2 = -9/2", text)
+
+    def test_negative_fraction_display(self):
+        """Сохраняет знак и точную запись дробного коэффициента."""
+        conditions = {
+            "a": 7,
+            "b": 2,
+            "c": 5,
+            "root1": 2,
+            "root2": 5,
+            "root_type": "distinct",
+            "coefficients": {"A1": Fraction(-2, 3), "A2": Fraction(5, 3)},
+        }
+        text = format_conditions(conditions)
+        self.assertIn("A1 = -2/3", text)
+        self.assertIn("A2 = 5/3", text)
 
 
 if __name__ == "__main__":
